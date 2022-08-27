@@ -1,0 +1,76 @@
+angle:=0.5
+jc:=200e10
+ImpulseTime:=20e-9
+fallingTime:=10e-9
+RelaxTime:=100e-9
+B_affix:=0.01
+
+Nx := 2  //minisize cell in x nm
+Ny := 2  //minisize cell in ys
+Nz := 2  //minisize cell in z
+
+diameter:= 128
+length := 5000
+width := 1000
+highth:= 2
+c:= 1e-10
+d:= 1e-9
+
+Setgridsize(100,100,1) // 3 layers and  set the size
+SetCellsize(Nx*d,Ny*d,Nz*d)  // size of cell
+
+//DefRegion(0,Cuboid(length*d, width*d, highth*d))
+setgeom( Cuboid(length*d, width*d, highth*d)) //region1 is the Cylinder layer
+
+damping_constant:= 0.01
+Msat  = 0.8e6
+Aex   = 1e-11
+alpha = damping_constant
+GammaLL= 1.76e11
+
+Ku1=0.6e6  //set the ku1 anistropy
+anisU = vector(0,0,1)
+
+TableAdd(B_eff)
+Bxhigh:= 10
+Bytiny:= 0.01
+
+//innitial setting
+m=uniform(0, 0, 1) //different
+save(m)
+autosave(m, 200e-11)
+tableautosave(10e-11)
+
+//set spinAngle
+
+spin_hall_angle:=0.6
+lambda = 1
+alphaH:= spin_hall_angle
+Pol = spin_hall_angle
+
+
+// Yita is difined as FlT over DLT
+Yita := 0.04
+//EPP_plus := spin_hall_angle*0.5*(Yita+damping_constant)/(1+damping_constant*Yita)
+//EpsilonPrime = EPP_plus
+
+EPP:= spin_hall_angle*0.5*Yita
+EpsilonPrime = EPP
+
+
+px := cos(angle*pi/180)
+py :=sin(angle*pi/180)
+fixedlayer = vector(0,px,-py)    //-y set as the position
+
+//Impulse stage
+J  = vector(0,0,jc)
+run(ImpulseTime)
+
+J = vector(0,0,(jc-(t-ImpulseTime)*jc/fallingTime))
+run(fallingTime)
+
+J = vector(0, 0, 0)
+run(RelaxTime)
+
+minimize()   // small changes best minimized by minimize()
+tablesave()
